@@ -1,0 +1,46 @@
+{
+	"name": "vscreen",
+	"version": "0.1.0",
+	"description": "Turn your Android tablet into a secondary monitor for Linux/Wayland over USB",
+	"type": "module",
+	"main": "dist/index.js",
+	"bin": {
+		"vscreen": "./bin/vscreen.js"
+	},
+	"scripts": {
+		"build": "tsc",
+		"dev": "tsx src/index.ts",
+		"lint": "biome lint src",
+		"format": "biome format src --write",
+		"check": "biome check src"
+	},
+	"keywords": [
+		"wayland",
+		"vnc",
+		"adb",
+		"virtual-display",
+		"android"
+	],
+	"author": "joelpn",
+	"license": "MIT",
+	"devEngines": {
+		"packageManager": {
+			"name": "pnpm",
+			"version": "^11.3.0",
+			"onFail": "download"
+		}
+	},
+	"dependencies": {
+		"chalk": "^5.6.2",
+		"commander": "^14.0.3",
+		"execa": "^9.6.1",
+		"inquirer": "^14.0.0",
+		"ora": "^9.4.0"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.4.15",
+		"@types/node": "^25.9.1",
+		"tsx": "^4.22.3",
+		"typescript": "^6.0.3"
+	}
+}
