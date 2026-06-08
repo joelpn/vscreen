@@ -13,23 +13,14 @@ let wayvncProcess: ChildProcess | null = null;
  * Spawns wayvnc as a detached child so it survives brief parent
  * interruptions.  We keep a reference to stop it cleanly later.
  */
-export async function startWayvnc(
-	displayId: string,
-	port: number,
-): Promise<VncServer> {
+export async function startWayvnc(displayId: string, port: number): Promise<VncServer> {
 	if (wayvncProcess) {
 		throw new Error(
 			"wayvnc is already running. Stop the current session before starting a new one.",
 		);
 	}
 
-	const args = [
-		"--output",
-		displayId,
-		"--render-cursor",
-		"0.0.0.0",
-		String(port),
-	];
+	const args = ["--output", displayId, "--render-cursor", "0.0.0.0", String(port)];
 
 	const child = spawn("wayvnc", args, {
 		detached: true,
@@ -76,29 +67,48 @@ export async function startWayvnc(
  * does not exit within 2 seconds.
  */
 export async function stopWayvnc(): Promise<void> {
-	if (!wayvncProcess) return;
+	// Kill the managed child process if we have one
+	if (wayvncProcess) {
+		const child = wayvncProcess;
+		wayvncProcess = null;
 
-	const child = wayvncProcess;
-	wayvncProcess = null;
+		child.kill("SIGTERM");
 
-	child.kill("SIGTERM");
+		await new Promise<void>((resolve) => {
+			const timeout = setTimeout(() => {
+				try {
+					child.kill("SIGKILL");
+				} catch {
+					// Already dead — ignore
+				}
+				resolve();
+			}, 2000);
 
-	await new Promise<void>((resolve) => {
-		const timeout = setTimeout(() => {
-			try {
-				child.kill("SIGKILL");
-			} catch {
-				// Already dead — ignore
-			}
-			resolve();
-		}, 2000);
-
-		child.on("exit", () => {
-			clearTimeout(timeout);
-			resolve();
+			child.on("exit", () => {
+				clearTimeout(timeout);
+				resolve();
+			});
 		});
-	});
+	}
+
+	// Also kill any external/orphaned wayvnc processes on the system
+	const externalPid = await findExternalWayvnc();
+	if (externalPid) {
+		try {
+			process.kill(externalPid, "SIGTERM");
+			// Give it a moment to exit gracefully
+			await new Promise((resolve) => setTimeout(resolve, 500));
+			// Confirm it's gone, SIGKILL if not
+			const stillRunning = await findExternalWayvnc();
+			if (stillRunning) {
+				process.kill(externalPid, "SIGKILL");
+			}
+		} catch {
+			// Process may have already exited — ignore
+		}
+	}
 }
+
 
 /**
  * Check whether the managed wayvnc child process is still alive.

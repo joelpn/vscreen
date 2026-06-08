@@ -1,17 +1,18 @@
-import { detectCompositor, isWlrBased } from "../compositor.ts";
-import { createSwayDisplay, removeSwayDisplay, listSwayOutputs } from "./sway.ts";
-import { createHyprlandDisplay, removeHyprlandDisplay, listHyprlandOutputs } from "./hyprland.ts";
-import { createGnomeDisplay, removeGnomeDisplay, listGnomeOutputs } from "./gnome.ts";
 import type { Compositor, VirtualDisplay } from "../../types/index.ts";
+import { detectCompositor, isWlrBased } from "../compositor.ts";
+import { createGnomeDisplay, listGnomeOutputs, removeGnomeDisplay } from "./gnome.ts";
+import { createHyprlandDisplay, listHyprlandOutputs, removeHyprlandDisplay } from "./hyprland.ts";
+import { createSwayDisplay, listSwayOutputs, removeSwayDisplay } from "./sway.ts";
 
 export async function createDisplay(
 	resolution: string,
 	refresh: number,
+	name?: string,
 	compositor?: Compositor,
 ): Promise<VirtualDisplay> {
 	const detected = compositor ?? (await detectCompositor());
 
-	if (detected === "hyprland") return createHyprlandDisplay(resolution, refresh);
+	if (detected === "hyprland") return createHyprlandDisplay(resolution, refresh, name);
 	if (detected === "gnome" || detected === "kde") return createGnomeDisplay(resolution, refresh);
 	if (isWlrBased(detected)) return createSwayDisplay(resolution, refresh);
 

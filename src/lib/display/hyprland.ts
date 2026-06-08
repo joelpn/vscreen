@@ -5,6 +5,7 @@ import type { VirtualDisplay } from "../../types/index.ts";
 const execFileAsync = promisify(execFile);
 
 interface HyprMonitor {
+	id: number;
 	name: string;
 	width: number;
 	height: number;
@@ -26,20 +27,30 @@ export async function createHyprlandDisplay(
 	refresh: number,
 	name = "HEADLESS-1",
 ): Promise<VirtualDisplay> {
-	const rule = `${name},${resolution}@${refresh},auto,1`;
-	await hyprctl(["keyword", "monitor", rule]);
+	// Hyprland doesn't allow arbitrary names for headless outputs.
+	// We must create it, let it assign a name like HEADLESS-1, and then set the rule.
+	const prevMonitors = await getMonitors();
+	await hyprctl(["output", "create", "headless"]);
 
-	const monitors = await getMonitors();
-	const created = monitors.find((m) => m.name === name) ?? monitors.at(-1);
+	// Wait a moment for Hyprland to register the new output
+	await new Promise((resolve) => setTimeout(resolve, 500));
+
+	const currentMonitors = await getMonitors();
+	// Find the newly created monitor
+	const created = currentMonitors.find((m) => !prevMonitors.some((p) => p.id === m.id));
 
 	if (!created) {
 		throw new Error("Failed to create virtual display in Hyprland.");
 	}
 
+	// Now apply the resolution and refresh rate rule to the new monitor
+	const rule = `${created.name},${resolution}@${refresh},auto,1`;
+	await hyprctl(["keyword", "monitor", rule]);
+
 	return {
 		id: created.name,
-		resolution: `${created.width}x${created.height}`,
-		refresh: Math.round(created.refreshRate),
+		resolution,
+		refresh,
 		compositor: "hyprland",
 		createdAt: new Date().toISOString(),
 	};
@@ -47,7 +58,7 @@ export async function createHyprlandDisplay(
 
 export async function removeHyprlandDisplay(id: string): Promise<void> {
 	try {
-		await hyprctl(["keyword", "monitor", `${id},disable`]);
+		await hyprctl(["output", "remove", id]);
 	} catch {
 		// Best-effort
 	}
