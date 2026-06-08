@@ -29,4 +29,5 @@ export interface StartOptions {
 	vncPort?: number;
 	deviceSerial?: string;
 	compositor?: import("./display.types.js").Compositor;
+	name?: string;
 }

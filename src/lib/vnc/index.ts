@@ -1,11 +1,6 @@
-import { assertDeps } from "../deps.ts";
 import type { VncServer } from "../../types/index.ts";
-import {
-	findExternalWayvnc,
-	isWayvncRunning,
-	startWayvnc,
-	stopWayvnc,
-} from "./wayvnc.ts";
+import { assertDeps } from "../deps.ts";
+import { findExternalWayvnc, isWayvncRunning, startWayvnc, stopWayvnc } from "./wayvnc.ts";
 
 const DEFAULT_VNC_PORT = 5900;
 
@@ -15,10 +10,7 @@ const DEFAULT_VNC_PORT = 5900;
  * Ensures `wayvnc` is installed before attempting to launch.
  * Guards against external instances that could cause port conflicts.
  */
-export async function startVnc(
-	displayId: string,
-	port = DEFAULT_VNC_PORT,
-): Promise<VncServer> {
+export async function startVnc(displayId: string, port = DEFAULT_VNC_PORT): Promise<VncServer> {
 	await assertDeps(["wayvnc"]);
 
 	const externalPid = await findExternalWayvnc();

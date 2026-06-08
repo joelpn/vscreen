@@ -7,9 +7,7 @@
 		"target": "esnext",
 		"rootDir": "./src",
 		"outDir": "./dist",
-		"types": [
-			"node"
-		],
+		"types": ["node"],
 		"sourceMap": true,
 		"declaration": true,
 		"declarationMap": true,
@@ -19,11 +17,6 @@
 		"moduleDetection": "force",
 		"skipLibCheck": true
 	},
-	"include": [
-		"src/**/*"
-	],
-	"exclude": [
-		"node_modules",
-		"dist"
-	]
+	"include": ["src/**/*"],
+	"exclude": ["node_modules", "dist"]
 }
